@@ -6,4 +6,5 @@ upload
 build
 *.db-journal
 logs
+docker-compose-private.yml
 web/dist
