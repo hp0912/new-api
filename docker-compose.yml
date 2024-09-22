@@ -62,3 +62,30 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: user***
       MONGO_INITDB_ROOT_PASSWORD: password***
+
+  midjourney-web:
+    image: registry.cn-shenzhen.aliyuncs.com/houhou/chatgpt-web-midjourney-proxy:latest
+    container_name: midjourney-web
+    restart: always
+    ports:
+      - '3002:3002'
+    environment:
+      OPENAI_API_BASE_URL: http://new-api:3000
+      OPENAI_API_KEY: password***
+      OPENAI_API_MODEL: gpt-4o-mini
+      MJ_SERVER: https://api.openai-hk.com
+      MJ_API_SECRET: password***
+      SUNO_SERVER: https://api.openai-hk.com
+      SUNO_KEY: password***
+      AUTH_SECRET_KEY: perfect***
+      AUTH_SECRET_ERROR_COUNT: 3
+      AUTH_SECRET_ERROR_TIME: 10
+      API_UPLOADER: 1
+      UPLOAD_TYPE: R2
+      LUMA_SERVER: https://api.openai-hk.com
+      LUMA_KEY: password***
+      R2_DOMAIN: mj-r2.houhoukang.com
+      R2_BUCKET_NAME: midjourney
+      R2_ACCOUNT_ID: xxx
+      R2_KEY_ID: xxx
+      R2_KEY_SECRET: xxx
