@@ -89,3 +89,12 @@ services:
       R2_ACCOUNT_ID: xxx
       R2_KEY_ID: xxx
       R2_KEY_SECRET: xxx
+
+  wechat-server:
+    image: registry.cn-shenzhen.aliyuncs.com/houhou/wechat-server:latest
+    container_name: wechat-server
+    restart: always
+    ports:
+      - "3003:3000"
+    volumes:
+      - ./wechat-server/data:/data
