@@ -8,3 +8,4 @@ build
 logs
 docker-compose-private.yml
 web/dist
+.env
