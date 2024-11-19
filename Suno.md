@@ -30,7 +30,7 @@
 ### 对接 Suno API
 
 1.
-部署 Suno API，并配置好suno账号等（强烈建议设置密钥），[项目地址](https://github.com/Suno-API/Suno-API)
+部署 Suno API，并配置好suno账号等（强烈建议设置密钥），[项目地址](https://github.com/Suno-API/Suno-API)。
 
 2. 在渠道管理中添加渠道，渠道类型选择**Suno API**
    ，模型请参考上方模型列表
