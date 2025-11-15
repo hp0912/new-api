@@ -3,9 +3,12 @@ package service
 import (
 	"bytes"
 	"fmt"
-	goahocorasick "github.com/anknown/ahocorasick"
-	"one-api/constant"
+	"hash/fnv"
+	"sort"
 	"strings"
+	"sync"
+
+	goahocorasick "github.com/anknown/ahocorasick"
 )
 
 func SundaySearch(text string, pattern string) bool {
@@ -57,24 +60,93 @@ func RemoveDuplicate(s []string) []string {
 	return result
 }
 
-func InitAc() *goahocorasick.Machine {
+func InitAc(dict []string) *goahocorasick.Machine {
 	m := new(goahocorasick.Machine)
-	dict := readRunes()
-	if err := m.Build(dict); err != nil {
+	runes := readRunes(dict)
+	if err := m.Build(runes); err != nil {
 		fmt.Println(err)
 		return nil
 	}
 	return m
 }
 
-func readRunes() [][]rune {
-	var dict [][]rune
+var acCache sync.Map
 
-	for _, word := range constant.SensitiveWords {
+func acKey(dict []string) string {
+	if len(dict) == 0 {
+		return ""
+	}
+	normalized := make([]string, 0, len(dict))
+	for _, w := range dict {
+		w = strings.ToLower(strings.TrimSpace(w))
+		if w != "" {
+			normalized = append(normalized, w)
+		}
+	}
+	if len(normalized) == 0 {
+		return ""
+	}
+	sort.Strings(normalized)
+	hasher := fnv.New64a()
+	for _, w := range normalized {
+		hasher.Write([]byte{0})
+		hasher.Write([]byte(w))
+	}
+	return fmt.Sprintf("%x", hasher.Sum64())
+}
+
+func getOrBuildAC(dict []string) *goahocorasick.Machine {
+	key := acKey(dict)
+	if key == "" {
+		return nil
+	}
+	if v, ok := acCache.Load(key); ok {
+		if m, ok2 := v.(*goahocorasick.Machine); ok2 {
+			return m
+		}
+	}
+	m := InitAc(dict)
+	if m == nil {
+		return nil
+	}
+	if actual, loaded := acCache.LoadOrStore(key, m); loaded {
+		if cached, ok := actual.(*goahocorasick.Machine); ok {
+			return cached
+		}
+	}
+	return m
+}
+
+func readRunes(dict []string) [][]rune {
+	var runes [][]rune
+
+	for _, word := range dict {
 		word = strings.ToLower(word)
 		l := bytes.TrimSpace([]byte(word))
-		dict = append(dict, bytes.Runes(l))
+		runes = append(runes, bytes.Runes(l))
 	}
 
-	return dict
+	return runes
+}
+
+func AcSearch(findText string, dict []string, stopImmediately bool) (bool, []string) {
+	if len(dict) == 0 {
+		return false, nil
+	}
+	if len(findText) == 0 {
+		return false, nil
+	}
+	m := getOrBuildAC(dict)
+	if m == nil {
+		return false, nil
+	}
+	hits := m.MultiPatternSearch([]rune(findText), stopImmediately)
+	if len(hits) > 0 {
+		words := make([]string, 0)
+		for _, hit := range hits {
+			words = append(words, string(hit.Word))
+		}
+		return true, words
+	}
+	return false, nil
 }

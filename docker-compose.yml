@@ -1,9 +1,22 @@
-version: '3.4'
+# New-API Docker Compose Configuration
+# 
+# Quick Start:
+#   1. docker-compose up -d
+#   2. Access at http://localhost:3000
+#
+# Using MySQL instead of PostgreSQL:
+#   1. Comment out the postgres service and SQL_DSN line 15
+#   2. Uncomment the mysql service and SQL_DSN line 16
+#   3. Uncomment mysql in depends_on (line 28)
+#   4. Uncomment mysql_data in volumes section (line 64)
+#
+# ⚠️  IMPORTANT: Change all default passwords before deploying to production!
+
+version: '3.4' # For compatibility with older Docker versions
 
 services:
   new-api:
     image: calciumion/new-api:latest
-    # build: .
     container_name: new-api
     restart: always
     command: --log-dir /app/logs
@@ -13,18 +26,25 @@ services:
       - ./data:/data
       - ./logs:/app/logs
     environment:
-      - SQL_DSN=root:123456@tcp(host.docker.internal:3306)/new-api # 修改此行，或注释掉以使用 SQLite 作为数据库
+      - SQL_DSN=postgresql://root:123456@postgres:5432/new-api # ⚠️ IMPORTANT: Change the password in production!
+#      - SQL_DSN=root:123456@tcp(mysql:3306)/new-api  # Point to the mysql service, uncomment if using MySQL
       - REDIS_CONN_STRING=redis://redis
-      - SESSION_SECRET=random_string # 修改为随机字符串
       - TZ=Asia/Shanghai
-    #      - NODE_TYPE=slave  # 多机部署时从节点取消注释该行
-    #      - SYNC_FREQUENCY=60  # 需要定期从数据库加载数据时取消注释该行
-    #      - FRONTEND_BASE_URL=https://openai.justsong.cn  # 多机部署时从节点取消注释该行
+      - ERROR_LOG_ENABLED=true # 是否启用错误日志记录 (Whether to enable error log recording)
+      - BATCH_UPDATE_ENABLED=true  # 是否启用批量更新 (Whether to enable batch update)
+#      - STREAMING_TIMEOUT=300  # 流模式无响应超时时间，单位秒，默认120秒，如果出现空补全可以尝试改为更大值 （Streaming timeout in seconds, default is 120s. Increase if experiencing empty completions）
+#      - SESSION_SECRET=random_string  # 多机部署时设置，必须修改这个随机字符串！！ （multi-node deployment, set this to a random string!!!!!!!）
+#      - SYNC_FREQUENCY=60  # Uncomment if regular database syncing is needed
+#      - GOOGLE_ANALYTICS_ID=G-XXXXXXXXXX  # Google Analytics 的测量 ID (Google Analytics Measurement ID)
+#      - UMAMI_WEBSITE_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  # Umami 网站 ID (Umami Website ID)
+#      - UMAMI_SCRIPT_URL=https://analytics.umami.is/script.js  # Umami 脚本 URL，默认为官方地址 (Umami Script URL, defaults to official URL)
 
     depends_on:
       - redis
+      - postgres
+#      - mysql  # Uncomment if using MySQL
     healthcheck:
-      test: [ "CMD-SHELL", "wget -q -O - http://localhost:3000/api/status | grep -o '\"success\":\\s*true' | awk -F: '{print $2}'" ]
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/api/status | grep -o '\"success\":\\s*true' || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -34,67 +54,31 @@ services:
     container_name: redis
     restart: always
 
-  midjourney:
-    image: registry.cn-shenzhen.aliyuncs.com/houhou/midjourney-proxy:latest
+  postgres:
+    image: postgres:15
+    container_name: postgres
     restart: always
-    container_name: mjopen
-    user: root
-    volumes:
-      - ./mjopen/logs:/app/logs:rw
-      - ./mjopen/data:/app/data:rw
-      - ./mjopen/attachments:/app/wwwroot/attachments:rw
-      - ./mjopen/ephemeral-attachments:/app/wwwroot/ephemeral-attachments:rw
-      - /etc/localtime:/etc/localtime:ro
-      - /etc/timezone:/etc/timezone:ro
-    ports:
-      - '3001:8080'
     environment:
-      TZ: Asia/Shanghai # 设置时区
-
-  midjourney-mongo:
-    image: mongo:latest
-    container_name: midjourney-mongo
-    restart: always
-    ports:
-      - '27017:27017'
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 123456  # ⚠️ IMPORTANT: Change this password in production!
+      POSTGRES_DB: new-api
     volumes:
-      - ./mjopen/mongo/data:/data/db
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: user***
-      MONGO_INITDB_ROOT_PASSWORD: password***
+      - pg_data:/var/lib/postgresql/data
+#    ports:
+#      - "5432:5432"  # Uncomment if you need to access PostgreSQL from outside Docker
 
-  midjourney-web:
-    image: registry.cn-shenzhen.aliyuncs.com/houhou/chatgpt-web-midjourney-proxy:latest
-    container_name: midjourney-web
-    restart: always
-    ports:
-      - '3002:3002'
-    environment:
-      OPENAI_API_BASE_URL: http://new-api:3000
-      OPENAI_API_KEY: password***
-      OPENAI_API_MODEL: gpt-4o-mini
-      MJ_SERVER: https://api.openai-hk.com
-      MJ_API_SECRET: password***
-      SUNO_SERVER: https://api.openai-hk.com
-      SUNO_KEY: password***
-      AUTH_SECRET_KEY: perfect***
-      AUTH_SECRET_ERROR_COUNT: 3
-      AUTH_SECRET_ERROR_TIME: 10
-      API_UPLOADER: 1
-      UPLOAD_TYPE: R2
-      LUMA_SERVER: https://api.openai-hk.com
-      LUMA_KEY: password***
-      R2_DOMAIN: mj-r2.houhoukang.com
-      R2_BUCKET_NAME: midjourney
-      R2_ACCOUNT_ID: xxx
-      R2_KEY_ID: xxx
-      R2_KEY_SECRET: xxx
+#  mysql:
+#    image: mysql:8.2
+#    container_name: mysql
+#    restart: always
+#    environment:
+#      MYSQL_ROOT_PASSWORD: 123456  # ⚠️ IMPORTANT: Change this password in production!
+#      MYSQL_DATABASE: new-api
+#    volumes:
+#      - mysql_data:/var/lib/mysql
+#    ports:
+#      - "3306:3306"  # Uncomment if you need to access MySQL from outside Docker
 
-  wechat-server:
-    image: registry.cn-shenzhen.aliyuncs.com/houhou/wechat-server:latest
-    container_name: wechat-server
-    restart: always
-    ports:
-      - "3003:3000"
-    volumes:
-      - ./wechat-server/data:/data
+volumes:
+  pg_data:
+#  mysql_data:

@@ -5,18 +5,27 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net/smtp"
+	"slices"
 	"strings"
 	"time"
 )
 
-func generateMessageID() string {
-	domain := strings.Split(SMTPAccount, "@")[1]
-	return fmt.Sprintf("<%d.%s@%s>", time.Now().UnixNano(), GetRandomString(12), domain)
+func generateMessageID() (string, error) {
+	split := strings.Split(SMTPFrom, "@")
+	if len(split) < 2 {
+		return "", fmt.Errorf("invalid SMTP account")
+	}
+	domain := strings.Split(SMTPFrom, "@")[1]
+	return fmt.Sprintf("<%d.%s@%s>", time.Now().UnixNano(), GetRandomString(12), domain), nil
 }
 
 func SendEmail(subject string, receiver string, content string) error {
 	if SMTPFrom == "" { // for compatibility
 		SMTPFrom = SMTPAccount
+	}
+	id, err2 := generateMessageID()
+	if err2 != nil {
+		return err2
 	}
 	if SMTPServer == "" && SMTPAccount == "" {
 		return fmt.Errorf("SMTP 服务器未配置")
@@ -28,7 +37,7 @@ func SendEmail(subject string, receiver string, content string) error {
 		"Date: %s\r\n"+
 		"Message-ID: %s\r\n"+ // 添加 Message-ID 头
 		"Content-Type: text/html; charset=UTF-8\r\n\r\n%s\r\n",
-		receiver, SystemName, SMTPFrom, encodedSubject, time.Now().Format(time.RFC1123Z), generateMessageID(), content))
+		receiver, SystemName, SMTPFrom, encodedSubject, time.Now().Format(time.RFC1123Z), id, content))
 	auth := smtp.PlainAuth("", SMTPAccount, SMTPToken, SMTPServer)
 	addr := fmt.Sprintf("%s:%d", SMTPServer, SMTPPort)
 	to := strings.Split(receiver, ";")
@@ -71,11 +80,14 @@ func SendEmail(subject string, receiver string, content string) error {
 		if err != nil {
 			return err
 		}
-	} else if isOutlookServer(SMTPAccount) {
+	} else if isOutlookServer(SMTPAccount) || slices.Contains(EmailLoginAuthServerList, SMTPServer) {
 		auth = LoginAuth(SMTPAccount, SMTPToken)
-		err = smtp.SendMail(addr, auth, SMTPAccount, to, mail)
+		err = smtp.SendMail(addr, auth, SMTPFrom, to, mail)
 	} else {
-		err = smtp.SendMail(addr, auth, SMTPAccount, to, mail)
+		err = smtp.SendMail(addr, auth, SMTPFrom, to, mail)
+	}
+	if err != nil {
+		SysError(fmt.Sprintf("failed to send email to %s: %v", receiver, err))
 	}
 	return err
 }

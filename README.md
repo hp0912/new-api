@@ -4,154 +4,444 @@
 
 # New API
 
-<a href="https://trendshift.io/repositories/8227" target="_blank"><img src="https://trendshift.io/api/badge/repositories/8227" alt="Calcium-Ion%2Fnew-api | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+🍥 **新一代大模型网关与AI资产管理系统**
+
+<p align="center">
+  <strong>中文</strong> | 
+  <a href="./README.en.md">English</a> | 
+  <a href="./README.fr.md">Français</a> | 
+  <a href="./README.ja.md">日本語</a>
+</p>
+
+<p align="center">
+  <a href="https://raw.githubusercontent.com/Calcium-Ion/new-api/main/LICENSE">
+    <img src="https://img.shields.io/github/license/Calcium-Ion/new-api?color=brightgreen" alt="license">
+  </a>
+  <a href="https://github.com/Calcium-Ion/new-api/releases/latest">
+    <img src="https://img.shields.io/github/v/release/Calcium-Ion/new-api?color=brightgreen&include_prereleases" alt="release">
+  </a>
+  <a href="https://github.com/users/Calcium-Ion/packages/container/package/new-api">
+    <img src="https://img.shields.io/badge/docker-ghcr.io-blue" alt="docker">
+  </a>
+  <a href="https://hub.docker.com/r/CalciumIon/new-api">
+    <img src="https://img.shields.io/badge/docker-dockerHub-blue" alt="docker">
+  </a>
+  <a href="https://goreportcard.com/report/github.com/Calcium-Ion/new-api">
+    <img src="https://goreportcard.com/badge/github.com/Calcium-Ion/new-api" alt="GoReportCard">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://trendshift.io/repositories/8227" target="_blank">
+    <img src="https://trendshift.io/api/badge/repositories/8227" alt="Calcium-Ion%2Fnew-api | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/>
+  </a>
+</p>
+
+<p align="center">
+  <a href="#-快速开始">快速开始</a> •
+  <a href="#-主要特性">主要特性</a> •
+  <a href="#-部署">部署</a> •
+  <a href="#-文档">文档</a> •
+  <a href="#-帮助支持">帮助</a>
+</p>
 
 </div>
 
-> [!NOTE]
-> 本项目为开源项目，在[One API](https://github.com/songquanpeng/one-api)的基础上进行二次开发
+## 📝 项目说明
 
-> [!IMPORTANT]
-> 使用者必须在遵循 OpenAI 的[使用条款](https://openai.com/policies/terms-of-use)以及**法律法规**的情况下使用，不得用于非法用途。
-> 本项目仅供个人学习使用，不保证稳定性，且不提供任何技术支持。
-> 根据[《生成式人工智能服务管理暂行办法》](http://www.cac.gov.cn/2023-07/13/c_1690898327029107.htm)的要求，请勿对中国地区公众提供一切未经备案的生成式人工智能服务。
+> [!NOTE]  
+> 本项目为开源项目，在 [One API](https://github.com/songquanpeng/one-api) 的基础上进行二次开发
 
-> [!TIP]
-> 最新版Docker镜像：`calciumion/new-api:latest`  
-> 默认账号root 密码123456  
-> 更新指令：
-> ```
-> docker run --rm -v /var/run/docker.sock:/var/run/docker.sock containrrr/watchtower -cR
-> ```
+> [!IMPORTANT]  
+> - 本项目仅供个人学习使用，不保证稳定性，且不提供任何技术支持
+> - 使用者必须在遵循 OpenAI 的 [使用条款](https://openai.com/policies/terms-of-use) 以及**法律法规**的情况下使用，不得用于非法用途
+> - 根据 [《生成式人工智能服务管理暂行办法》](http://www.cac.gov.cn/2023-07/13/c_1690898327029107.htm) 的要求，请勿对中国地区公众提供一切未经备案的生成式人工智能服务
 
+---
 
-## 主要变更
-此分叉版本的主要变更如下：
+## 🤝 我们信任的合作伙伴
 
-1. 全新的UI界面（部分界面还待更新）
-2. 添加[Midjourney-Proxy(Plus)](https://github.com/novicezk/midjourney-proxy)接口的支持，[对接文档](Midjourney.md)
-3. 支持在线充值功能，可在系统设置中设置，当前支持的支付接口：
-    + [x] 易支付
-4. 支持用key查询使用额度:
-    + 配合项目[neko-api-key-tool](https://github.com/Calcium-Ion/neko-api-key-tool)可实现用key查询使用
-5. 渠道显示已使用额度，支持指定组织访问
-6. 分页支持选择每页显示数量
-7. 兼容原版One API的数据库，可直接使用原版数据库（one-api.db）
-8. 支持模型按次数收费，可在 系统设置-运营设置 中设置
-9. 支持渠道**加权随机**
-10. 数据看板
-11. 可设置令牌能调用的模型
-12. 支持Telegram授权登录。
-    1. 系统设置-配置登录注册-允许通过Telegram登录
-    2. 对[@Botfather](https://t.me/botfather)输入指令/setdomain
-    3. 选择你的bot，然后输入http(s)://你的网站地址/login
-    4. Telegram Bot 名称是bot username 去掉@后的字符串
-13. 添加 [Suno API](https://github.com/Suno-API/Suno-API)接口的支持，[对接文档](Suno.md)
-14. 支持Rerank模型，目前仅兼容Cohere和Jina，可接入Dify，[对接文档](Rerank.md)
-15. **[OpenAI Realtime API](https://platform.openai.com/docs/guides/realtime/integration)** - 支持OpenAI的Realtime API，支持Azure渠道。
+<p align="center">
+  <em>排名不分先后</em>
+</p>
 
-## 模型支持
-此版本额外支持以下模型：
-1. 第三方模型 **gps** （gpt-4-gizmo-*）
-2. 智谱glm-4v，glm-4v识图
-3. Anthropic Claude 3
-4. [Ollama](https://github.com/ollama/ollama?tab=readme-ov-file)，添加渠道时，密钥可以随便填写，默认的请求地址是[http://localhost:11434](http://localhost:11434)，如果需要修改请在渠道中修改
-5. [Midjourney-Proxy(Plus)](https://github.com/novicezk/midjourney-proxy)接口，[对接文档](Midjourney.md)
-6. [零一万物](https://platform.lingyiwanwu.com/)
-7. 自定义渠道，支持填入完整调用地址
-8. [Suno API](https://github.com/Suno-API/Suno-API) 接口，[对接文档](Suno.md)
-9. Rerank模型，目前支持[Cohere](https://cohere.ai/)和[Jina](https://jina.ai/)，[对接文档](Rerank.md)
-10. Dify
-11. Vertex AI，目前兼容Claude，Gemini，Llama3.1
+<p align="center">
+  <a href="https://www.cherry-ai.com/" target="_blank">
+    <img src="./docs/images/cherry-studio.png" alt="Cherry Studio" height="80" />
+  </a>
+  <a href="https://bda.pku.edu.cn/" target="_blank">
+    <img src="./docs/images/pku.png" alt="北京大学" height="80" />
+  </a>
+  <a href="https://www.compshare.cn/?ytag=GPU_yy_gh_newapi" target="_blank">
+    <img src="./docs/images/ucloud.png" alt="UCloud 优刻得" height="80" />
+  </a>
+  <a href="https://www.aliyun.com/" target="_blank">
+    <img src="./docs/images/aliyun.png" alt="阿里云" height="80" />
+  </a>
+  <a href="https://io.net/" target="_blank">
+    <img src="./docs/images/io-net.png" alt="IO.NET" height="80" />
+  </a>
+</p>
 
-您可以在渠道中添加自定义模型gpt-4-gizmo-*，此模型并非OpenAI官方模型，而是第三方模型，使用官方key无法调用。
+---
 
-## 比原版One API多出的配置
-- `GENERATE_DEFAULT_TOKEN`：是否为新注册用户生成初始令牌，默认为 `false`。
-- `STREAMING_TIMEOUT`：设置流式一次回复的超时时间，默认为 60 秒。
-- `DIFY_DEBUG`：设置 Dify 渠道是否输出工作流和节点信息到客户端，默认为 `true`。
-- `FORCE_STREAM_OPTION`：是否覆盖客户端stream_options参数，请求上游返回流模式usage，默认为 `true`，建议开启，不影响客户端传入stream_options参数返回结果。
-- `GET_MEDIA_TOKEN`：是统计图片token，默认为 `true`，关闭后将不再在本地计算图片token，可能会导致和上游计费不同，此项覆盖 `GET_MEDIA_TOKEN_NOT_STREAM` 选项作用。
-- `GET_MEDIA_TOKEN_NOT_STREAM`：是否在非流（`stream=false`）情况下统计图片token，默认为 `true`。
-- `UPDATE_TASK`：是否更新异步任务（Midjourney、Suno），默认为 `true`，关闭后将不会更新任务进度。
-- `GEMINI_MODEL_MAP`：Gemini模型指定版本(v1/v1beta)，使用“模型:版本”指定，","分隔，例如：-e GEMINI_MODEL_MAP="gemini-1.5-pro-latest:v1beta,gemini-1.5-pro-001:v1beta"，为空则使用默认配置(v1beta)
-- `COHERE_SAFETY_SETTING`：Cohere模型[安全设置](https://docs.cohere.com/docs/safety-modes#overview)，可选值为 `NONE`, `CONTEXTUAL`，`STRICT`，默认为 `NONE`。
-## 部署
-### 部署要求
-- 本地数据库（默认）：SQLite（Docker 部署默认使用 SQLite，必须挂载 `/data` 目录到宿主机）
-- 远程数据库：MySQL 版本 >= 5.7.8，PgSQL 版本 >= 9.6
+## 🙏 特别鸣谢
 
-### 使用宝塔面板Docker功能部署
-安装宝塔面板 (**9.2.0版本**及以上)，前往 [宝塔面板](https://www.bt.cn/new/download.html) 官网，选择正式版的脚本下载安装  
-安装后登录宝塔面板，在菜单栏中点击 Docker ，首次进入会提示安装 Docker 服务，点击立即安装，按提示完成安装  
-安装完成后在应用商店中找到 **New-API** ，点击安装，配置基本选项 即可完成安装  
-[图文教程](BT.md)
+<p align="center">
+  <a href="https://www.jetbrains.com/?from=new-api" target="_blank">
+    <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" alt="JetBrains Logo" width="120" />
+  </a>
+</p>
 
-### 基于 Docker 进行部署
-### 使用 Docker Compose 部署（推荐）
-```shell
-# 下载项目
-git clone https://github.com/Calcium-Ion/new-api.git
+<p align="center">
+  <strong>感谢 <a href="https://www.jetbrains.com/?from=new-api">JetBrains</a> 为本项目提供免费的开源开发许可证</strong>
+</p>
+
+---
+
+## 🚀 快速开始
+
+### 使用 Docker Compose（推荐）
+
+```bash
+# 克隆项目
+git clone https://github.com/QuantumNous/new-api.git
 cd new-api
-# 按需编辑 docker-compose.yml
-# 启动
+
+# 编辑 docker-compose.yml 配置
+nano docker-compose.yml
+
+# 启动服务
 docker-compose up -d
 ```
 
-### 直接使用 Docker 镜像
-```shell
-# 使用 SQLite 的部署命令：
-docker run --name new-api -d --restart always -p 3000:3000 -e TZ=Asia/Shanghai -v /home/ubuntu/data/new-api:/data calciumion/new-api:latest
-# 使用 MySQL 的部署命令，在上面的基础上添加 `-e SQL_DSN="root:123456@tcp(localhost:3306)/oneapi"`，请自行修改数据库连接参数。
-# 例如：
-docker run --name new-api -d --restart always -p 3000:3000 -e SQL_DSN="root:123456@tcp(localhost:3306)/oneapi" -e TZ=Asia/Shanghai -v /home/ubuntu/data/new-api:/data calciumion/new-api:latest
+<details>
+<summary><strong>使用 Docker 命令</strong></summary>
+
+```bash
+# 拉取最新镜像
+docker pull calciumion/new-api:latest
+
+# 使用 SQLite（默认）
+docker run --name new-api -d --restart always \
+  -p 3000:3000 \
+  -e TZ=Asia/Shanghai \
+  -v ./data:/data \
+  calciumion/new-api:latest
+
+# 使用 MySQL
+docker run --name new-api -d --restart always \
+  -p 3000:3000 \
+  -e SQL_DSN="root:123456@tcp(localhost:3306)/oneapi" \
+  -e TZ=Asia/Shanghai \
+  -v ./data:/data \
+  calciumion/new-api:latest
 ```
 
-## 渠道重试
-渠道重试功能已经实现，可以在`设置->运营设置->通用设置`设置重试次数，**建议开启缓存**功能。  
-如果开启了重试功能，第一次重试使用同优先级，第二次重试使用下一个优先级，以此类推。
-### 缓存设置方法
-1. `REDIS_CONN_STRING`：设置之后将使用 Redis 作为缓存使用。
-    + 例子：`REDIS_CONN_STRING=redis://default:redispw@localhost:49153`
-2. `MEMORY_CACHE_ENABLED`：启用内存缓存（如果设置了`REDIS_CONN_STRING`，则无需手动设置），会导致用户额度的更新存在一定的延迟，可选值为 `true` 和 `false`，未设置则默认为 `false`。
-    + 例子：`MEMORY_CACHE_ENABLED=true`
-### 为什么有的时候没有重试
-这些错误码不会重试：400，504，524
-### 我想让400也重试
-在`渠道->编辑`中，将`状态码复写`改为
-```json
-{
-  "400": "500"
-}
+> **💡 提示：** `-v ./data:/data` 会将数据保存在当前目录的 `data` 文件夹中，你也可以改为绝对路径如 `-v /your/custom/path:/data`
+
+</details>
+
+---
+
+🎉 部署完成后，访问 `http://localhost:3000` 即可使用！
+
+📖 更多部署方式请参考 [部署指南](https://docs.newapi.pro/installation)
+
+---
+
+## 📚 文档
+
+<div align="center">
+
+### 📖 [官方文档](https://docs.newapi.pro/) | [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/QuantumNous/new-api)
+
+</div>
+
+**快速导航：**
+
+| 分类 | 链接 |
+|------|------|
+| 🚀 部署指南 | [安装文档](https://docs.newapi.pro/installation) |
+| ⚙️ 环境配置 | [环境变量](https://docs.newapi.pro/installation/environment-variables) |
+| 📡 接口文档 | [API 文档](https://docs.newapi.pro/api) |
+| ❓ 常见问题 | [FAQ](https://docs.newapi.pro/support/faq) |
+| 💬 社区交流 | [交流渠道](https://docs.newapi.pro/support/community-interaction) |
+
+---
+
+## ✨ 主要特性
+
+> 详细特性请参考 [特性说明](https://docs.newapi.pro/wiki/features-introduction)
+
+### 🎨 核心功能
+
+| 特性 | 说明 |
+|------|------|
+| 🎨 全新 UI | 现代化的用户界面设计 |
+| 🌍 多语言 | 支持中文、英文、法语、日语 |
+| 🔄 数据兼容 | 完全兼容原版 One API 数据库 |
+| 📈 数据看板 | 可视化控制台与统计分析 |
+| 🔒 权限管理 | 令牌分组、模型限制、用户管理 |
+
+### 💰 支付与计费
+
+- ✅ 在线充值（易支付、Stripe）
+- ✅ 模型按次数收费
+- ✅ 缓存计费支持（OpenAI、Azure、DeepSeek、Claude、Qwen等所有支持的模型）
+- ✅ 灵活的计费策略配置
+
+### 🔐 授权与安全
+
+- 🤖 LinuxDO 授权登录
+- 📱 Telegram 授权登录
+- 🔑 OIDC 统一认证
+- 🔍 Key 查询使用额度（配合 [neko-api-key-tool](https://github.com/Calcium-Ion/neko-api-key-tool)）
+
+### 🚀 高级功能
+
+**API 格式支持：**
+- ⚡ [OpenAI Responses](https://docs.newapi.pro/api/openai-responses)
+- ⚡ [OpenAI Realtime API](https://docs.newapi.pro/api/openai-realtime)（含 Azure）
+- ⚡ [Claude Messages](https://docs.newapi.pro/api/anthropic-chat)
+- ⚡ [Google Gemini](https://docs.newapi.pro/api/google-gemini-chat/)
+- 🔄 [Rerank 模型](https://docs.newapi.pro/api/jinaai-rerank)（Cohere、Jina）
+
+**智能路由：**
+- ⚖️ 渠道加权随机
+- 🔄 失败自动重试
+- 🚦 用户级别模型限流
+
+**格式转换：**
+- 🔄 OpenAI ⇄ Claude Messages
+- 🔄 OpenAI ⇄ Gemini Chat
+- 🔄 思考转内容功能
+
+**Reasoning Effort 支持：**
+
+<details>
+<summary>查看详细配置</summary>
+
+**OpenAI 系列模型：**
+- `o3-mini-high` - High reasoning effort
+- `o3-mini-medium` - Medium reasoning effort
+- `o3-mini-low` - Low reasoning effort
+- `gpt-5-high` - High reasoning effort
+- `gpt-5-medium` - Medium reasoning effort
+- `gpt-5-low` - Low reasoning effort
+
+**Claude 思考模型：**
+- `claude-3-7-sonnet-20250219-thinking` - 启用思考模式
+
+**Google Gemini 系列模型：**
+- `gemini-2.5-flash-thinking` - 启用思考模式
+- `gemini-2.5-flash-nothinking` - 禁用思考模式
+- `gemini-2.5-pro-thinking` - 启用思考模式
+- `gemini-2.5-pro-thinking-128` - 启用思考模式，并设置思考预算为128tokens
+
+</details>
+
+---
+
+## 🤖 模型支持
+
+> 详情请参考 [接口文档 - 中继接口](https://docs.newapi.pro/api)
+
+| 模型类型 | 说明 | 文档 |
+|---------|------|------|
+| 🤖 OpenAI GPTs | gpt-4-gizmo-* 系列 | - |
+| 🎨 Midjourney-Proxy | [Midjourney-Proxy(Plus)](https://github.com/novicezk/midjourney-proxy) | [文档](https://docs.newapi.pro/api/midjourney-proxy-image) |
+| 🎵 Suno-API | [Suno API](https://github.com/Suno-API/Suno-API) | [文档](https://docs.newapi.pro/api/suno-music) |
+| 🔄 Rerank | Cohere、Jina | [文档](https://docs.newapi.pro/api/jinaai-rerank) |
+| 💬 Claude | Messages 格式 | [文档](https://docs.newapi.pro/api/anthropic-chat) |
+| 🌐 Gemini | Google Gemini 格式 | [文档](https://docs.newapi.pro/api/google-gemini-chat/) |
+| 🔧 Dify | ChatFlow 模式 | - |
+| 🎯 自定义 | 支持完整调用地址 | - |
+
+### 📡 支持的接口
+
+<details>
+<summary>查看完整接口列表</summary>
+
+- [聊天接口 (Chat Completions)](https://docs.newapi.pro/api/openai-chat)
+- [响应接口 (Responses)](https://docs.newapi.pro/api/openai-responses)
+- [图像接口 (Image)](https://docs.newapi.pro/api/openai-image)
+- [音频接口 (Audio)](https://docs.newapi.pro/api/openai-audio)
+- [视频接口 (Video)](https://docs.newapi.pro/api/openai-video)
+- [嵌入接口 (Embeddings)](https://docs.newapi.pro/api/openai-embeddings)
+- [重排序接口 (Rerank)](https://docs.newapi.pro/api/jinaai-rerank)
+- [实时对话 (Realtime)](https://docs.newapi.pro/api/openai-realtime)
+- [Claude 聊天](https://docs.newapi.pro/api/anthropic-chat)
+- [Google Gemini 聊天](https://docs.newapi.pro/api/google-gemini-chat)
+
+</details>
+
+---
+
+## 🚢 部署
+
+> [!TIP]
+> **最新版 Docker 镜像：** `calciumion/new-api:latest`
+
+### 📋 部署要求
+
+| 组件 | 要求 |
+|------|------|
+| **本地数据库** | SQLite（Docker 需挂载 `/data` 目录）|
+| **远程数据库** | MySQL ≥ 5.7.8 或 PostgreSQL ≥ 9.6 |
+| **容器引擎** | Docker / Docker Compose |
+
+### ⚙️ 环境变量配置
+
+<details>
+<summary>常用环境变量配置</summary>
+
+| 变量名 | 说明 | 默认值 |
+|--------|------|--------|
+| `SESSION_SECRET` | 会话密钥（多机部署必须） | - |
+| `CRYPTO_SECRET` | 加密密钥（Redis 必须） | - |
+| `SQL_DSN` | 数据库连接字符串 | - |
+| `REDIS_CONN_STRING` | Redis 连接字符串 | - |
+| `STREAMING_TIMEOUT` | 流式超时时间（秒） | `300` |
+| `AZURE_DEFAULT_API_VERSION` | Azure API 版本 | `2025-04-01-preview` |
+| `ERROR_LOG_ENABLED` | 错误日志开关 | `false` |
+
+📖 **完整配置：** [环境变量文档](https://docs.newapi.pro/installation/environment-variables)
+
+</details>
+
+### 🔧 部署方式
+
+<details>
+<summary><strong>方式 1：Docker Compose（推荐）</strong></summary>
+
+```bash
+# 克隆项目
+git clone https://github.com/QuantumNous/new-api.git
+cd new-api
+
+# 编辑配置
+nano docker-compose.yml
+
+# 启动服务
+docker-compose up -d
 ```
-可以实现400错误转为500错误，从而重试
 
-## Midjourney接口设置文档
-[对接文档](Midjourney.md)
+</details>
 
-## Suno接口设置文档
-[对接文档](Suno.md)
+<details>
+<summary><strong>方式 2：Docker 命令</strong></summary>
 
-## 界面截图
-![796df8d287b7b7bd7853b2497e7df511](https://github.com/user-attachments/assets/255b5e97-2d3a-4434-b4fa-e922ad88ff5a)
+**使用 SQLite：**
+```bash
+docker run --name new-api -d --restart always \
+  -p 3000:3000 \
+  -e TZ=Asia/Shanghai \
+  -v ./data:/data \
+  calciumion/new-api:latest
+```
 
-![image](https://github.com/Calcium-Ion/new-api/assets/61247483/ad0e7aae-0203-471c-9716-2d83768927d4)
-![image](https://github.com/user-attachments/assets/29f81de5-33fc-4fc5-a5ff-f9b54b653c7c)
+**使用 MySQL：**
+```bash
+docker run --name new-api -d --restart always \
+  -p 3000:3000 \
+  -e SQL_DSN="root:123456@tcp(localhost:3306)/oneapi" \
+  -e TZ=Asia/Shanghai \
+  -v ./data:/data \
+  calciumion/new-api:latest
+```
 
-![image](https://github.com/Calcium-Ion/new-api/assets/61247483/3ca0b282-00ff-4c96-bf9d-e29ef615c605)
-夜间模式  
-![image](https://github.com/Calcium-Ion/new-api/assets/61247483/1c66b593-bb9e-4757-9720-ff2759539242)
-![image](https://github.com/Calcium-Ion/new-api/assets/61247483/af9a07ee-5101-4b3d-8bd9-ae21a4fd7e9e)
+> **💡 路径说明：** 
+> - `./data:/data` - 相对路径，数据保存在当前目录的 data 文件夹
+> - 也可使用绝对路径，如：`/your/custom/path:/data`
 
-## 交流群
-<img src="https://github.com/user-attachments/assets/9ca0bc82-e057-4230-a28d-9f198fa022e3" width="200">
+</details>
 
-## 相关项目
-- [One API](https://github.com/songquanpeng/one-api)：原版项目
-- [Midjourney-Proxy](https://github.com/novicezk/midjourney-proxy)：Midjourney接口支持
-- [chatnio](https://github.com/Deeptrain-Community/chatnio)：下一代 AI 一站式 B/C 端解决方案
-- [neko-api-key-tool](https://github.com/Calcium-Ion/neko-api-key-tool)：用key查询使用额度
+<details>
+<summary><strong>方式 3：宝塔面板</strong></summary>
 
-## Star History
+1. 安装宝塔面板（≥ 9.2.0 版本）
+2. 在应用商店搜索 **New-API**
+3. 一键安装
+
+📖 [图文教程](./docs/BT.md)
+
+</details>
+
+### ⚠️ 多机部署注意事项
+
+> [!WARNING]
+> - **必须设置** `SESSION_SECRET` - 否则登录状态不一致
+> - **公用 Redis 必须设置** `CRYPTO_SECRET` - 否则数据无法解密
+
+### 🔄 渠道重试与缓存
+
+**重试配置：** `设置 → 运营设置 → 通用设置 → 失败重试次数`
+
+**缓存配置：**
+- `REDIS_CONN_STRING`：Redis 缓存（推荐）
+- `MEMORY_CACHE_ENABLED`：内存缓存
+
+---
+
+## 🔗 相关项目
+
+### 上游项目
+
+| 项目 | 说明 |
+|------|------|
+| [One API](https://github.com/songquanpeng/one-api) | 原版项目基础 |
+| [Midjourney-Proxy](https://github.com/novicezk/midjourney-proxy) | Midjourney 接口支持 |
+
+### 配套工具
+
+| 项目 | 说明 |
+|------|------|
+| [neko-api-key-tool](https://github.com/Calcium-Ion/neko-api-key-tool) | Key 额度查询工具 |
+| [new-api-horizon](https://github.com/Calcium-Ion/new-api-horizon) | New API 高性能优化版 |
+
+---
+
+## 💬 帮助支持
+
+### 📖 文档资源
+
+| 资源 | 链接 |
+|------|------|
+| 📘 常见问题 | [FAQ](https://docs.newapi.pro/support/faq) |
+| 💬 社区交流 | [交流渠道](https://docs.newapi.pro/support/community-interaction) |
+| 🐛 反馈问题 | [问题反馈](https://docs.newapi.pro/support/feedback-issues) |
+| 📚 完整文档 | [官方文档](https://docs.newapi.pro/support) |
+
+### 🤝 贡献指南
+
+欢迎各种形式的贡献！
+
+- 🐛 报告 Bug
+- 💡 提出新功能
+- 📝 改进文档
+- 🔧 提交代码
+
+---
+
+## 🌟 Star History
+
+<div align="center">
 
 [![Star History Chart](https://api.star-history.com/svg?repos=Calcium-Ion/new-api&type=Date)](https://star-history.com/#Calcium-Ion/new-api&Date)
+
+</div>
+
+---
+
+<div align="center">
+
+### 💖 感谢使用 New API
+
+如果这个项目对你有帮助，欢迎给我们一个 ⭐️ Star！
+
+**[官方文档](https://docs.newapi.pro/)** • **[问题反馈](https://github.com/Calcium-Ion/new-api/issues)** • **[最新发布](https://github.com/Calcium-Ion/new-api/releases)**
+
+<sub>Built with ❤️ by QuantumNous</sub>
+
+</div>

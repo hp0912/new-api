@@ -1,8 +1,9 @@
 package baidu
 
 import (
-	"one-api/dto"
 	"time"
+
+	"github.com/QuantumNous/new-api/dto"
 )
 
 type BaiduMessage struct {
@@ -12,7 +13,7 @@ type BaiduMessage struct {
 
 type BaiduChatRequest struct {
 	Messages        []BaiduMessage `json:"messages"`
-	Temperature     float64        `json:"temperature,omitempty"`
+	Temperature     *float64       `json:"temperature,omitempty"`
 	TopP            float64        `json:"top_p,omitempty"`
 	PenaltyScore    float64        `json:"penalty_score,omitempty"`
 	Stream          bool           `json:"stream,omitempty"`

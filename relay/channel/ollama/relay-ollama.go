@@ -1,131 +1,285 @@
 package ollama
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"io"
 	"net/http"
-	"one-api/dto"
-	"one-api/service"
+	"strings"
+
+	"github.com/QuantumNous/new-api/common"
+	"github.com/QuantumNous/new-api/dto"
+	relaycommon "github.com/QuantumNous/new-api/relay/common"
+	"github.com/QuantumNous/new-api/service"
+	"github.com/QuantumNous/new-api/types"
+
+	"github.com/gin-gonic/gin"
 )
 
-func requestOpenAI2Ollama(request dto.GeneralOpenAIRequest) *OllamaRequest {
-	messages := make([]dto.Message, 0, len(request.Messages))
-	for _, message := range request.Messages {
-		messages = append(messages, dto.Message{
-			Role:    message.Role,
-			Content: message.Content,
-		})
+func openAIChatToOllamaChat(c *gin.Context, r *dto.GeneralOpenAIRequest) (*OllamaChatRequest, error) {
+	chatReq := &OllamaChatRequest{
+		Model:   r.Model,
+		Stream:  r.Stream,
+		Options: map[string]any{},
+		Think:   r.Think,
 	}
-	str, ok := request.Stop.(string)
-	var Stop []string
-	if ok {
-		Stop = []string{str}
-	} else {
-		Stop, _ = request.Stop.([]string)
-	}
-	return &OllamaRequest{
-		Model:            request.Model,
-		Messages:         messages,
-		Stream:           request.Stream,
-		Temperature:      request.Temperature,
-		Seed:             request.Seed,
-		Topp:             request.TopP,
-		TopK:             request.TopK,
-		Stop:             Stop,
-		Tools:            request.Tools,
-		ResponseFormat:   request.ResponseFormat,
-		FrequencyPenalty: request.FrequencyPenalty,
-		PresencePenalty:  request.PresencePenalty,
-	}
-}
-
-func requestOpenAI2Embeddings(request dto.GeneralOpenAIRequest) *OllamaEmbeddingRequest {
-	return &OllamaEmbeddingRequest{
-		Model: request.Model,
-		Input: request.ParseInput(),
-		Options: &Options{
-			Seed:             int(request.Seed),
-			Temperature:      request.Temperature,
-			TopP:             request.TopP,
-			FrequencyPenalty: request.FrequencyPenalty,
-			PresencePenalty:  request.PresencePenalty,
-		},
-	}
-}
-
-func ollamaEmbeddingHandler(c *gin.Context, resp *http.Response, promptTokens int, model string, relayMode int) (*dto.OpenAIErrorWithStatusCode, *dto.Usage) {
-	var ollamaEmbeddingResponse OllamaEmbeddingResponse
-	responseBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return service.OpenAIErrorWrapper(err, "read_response_body_failed", http.StatusInternalServerError), nil
-	}
-	err = resp.Body.Close()
-	if err != nil {
-		return service.OpenAIErrorWrapper(err, "close_response_body_failed", http.StatusInternalServerError), nil
-	}
-	err = json.Unmarshal(responseBody, &ollamaEmbeddingResponse)
-	if err != nil {
-		return service.OpenAIErrorWrapper(err, "unmarshal_response_body_failed", http.StatusInternalServerError), nil
-	}
-	if ollamaEmbeddingResponse.Error != "" {
-		return service.OpenAIErrorWrapper(err, "ollama_error", resp.StatusCode), nil
-	}
-	flattenedEmbeddings := flattenEmbeddings(ollamaEmbeddingResponse.Embedding)
-	data := make([]dto.OpenAIEmbeddingResponseItem, 0, 1)
-	data = append(data, dto.OpenAIEmbeddingResponseItem{
-		Embedding: flattenedEmbeddings,
-		Object:    "embedding",
-	})
-	usage := &dto.Usage{
-		TotalTokens:      promptTokens,
-		CompletionTokens: 0,
-		PromptTokens:     promptTokens,
-	}
-	embeddingResponse := &dto.OpenAIEmbeddingResponse{
-		Object: "list",
-		Data:   data,
-		Model:  model,
-		Usage:  *usage,
-	}
-	doResponseBody, err := json.Marshal(embeddingResponse)
-	if err != nil {
-		return service.OpenAIErrorWrapper(err, "marshal_response_body_failed", http.StatusInternalServerError), nil
-	}
-	resp.Body = io.NopCloser(bytes.NewBuffer(doResponseBody))
-	// We shouldn't set the header before we parse the response body, because the parse part may fail.
-	// And then we will have to send an error response, but in this case, the header has already been set.
-	// So the httpClient will be confused by the response.
-	// For example, Postman will report error, and we cannot check the response at all.
-	// Copy headers
-	for k, v := range resp.Header {
-		// 删除任何现有的相同头部，以防止重复添加头部
-		c.Writer.Header().Del(k)
-		for _, vv := range v {
-			c.Writer.Header().Add(k, vv)
+	if r.ResponseFormat != nil {
+		if r.ResponseFormat.Type == "json" {
+			chatReq.Format = "json"
+		} else if r.ResponseFormat.Type == "json_schema" {
+			if len(r.ResponseFormat.JsonSchema) > 0 {
+				var schema any
+				_ = json.Unmarshal(r.ResponseFormat.JsonSchema, &schema)
+				chatReq.Format = schema
+			}
 		}
 	}
-	// reset content length
-	c.Writer.Header().Del("Content-Length")
-	c.Writer.Header().Set("Content-Length", fmt.Sprintf("%d", len(doResponseBody)))
-	c.Writer.WriteHeader(resp.StatusCode)
-	_, err = io.Copy(c.Writer, resp.Body)
-	if err != nil {
-		return service.OpenAIErrorWrapper(err, "copy_response_body_failed", http.StatusInternalServerError), nil
+
+	// options mapping
+	if r.Temperature != nil {
+		chatReq.Options["temperature"] = r.Temperature
 	}
-	err = resp.Body.Close()
-	if err != nil {
-		return service.OpenAIErrorWrapper(err, "close_response_body_failed", http.StatusInternalServerError), nil
+	if r.TopP != 0 {
+		chatReq.Options["top_p"] = r.TopP
 	}
-	return nil, usage
+	if r.TopK != 0 {
+		chatReq.Options["top_k"] = r.TopK
+	}
+	if r.FrequencyPenalty != 0 {
+		chatReq.Options["frequency_penalty"] = r.FrequencyPenalty
+	}
+	if r.PresencePenalty != 0 {
+		chatReq.Options["presence_penalty"] = r.PresencePenalty
+	}
+	if r.Seed != 0 {
+		chatReq.Options["seed"] = int(r.Seed)
+	}
+	if mt := r.GetMaxTokens(); mt != 0 {
+		chatReq.Options["num_predict"] = int(mt)
+	}
+
+	if r.Stop != nil {
+		switch v := r.Stop.(type) {
+		case string:
+			chatReq.Options["stop"] = []string{v}
+		case []string:
+			chatReq.Options["stop"] = v
+		case []any:
+			arr := make([]string, 0, len(v))
+			for _, i := range v {
+				if s, ok := i.(string); ok {
+					arr = append(arr, s)
+				}
+			}
+			if len(arr) > 0 {
+				chatReq.Options["stop"] = arr
+			}
+		}
+	}
+
+	if len(r.Tools) > 0 {
+		tools := make([]OllamaTool, 0, len(r.Tools))
+		for _, t := range r.Tools {
+			tools = append(tools, OllamaTool{Type: "function", Function: OllamaToolFunction{Name: t.Function.Name, Description: t.Function.Description, Parameters: t.Function.Parameters}})
+		}
+		chatReq.Tools = tools
+	}
+
+	chatReq.Messages = make([]OllamaChatMessage, 0, len(r.Messages))
+	for _, m := range r.Messages {
+		var textBuilder strings.Builder
+		var images []string
+		if m.IsStringContent() {
+			textBuilder.WriteString(m.StringContent())
+		} else {
+			parts := m.ParseContent()
+			for _, part := range parts {
+				if part.Type == dto.ContentTypeImageURL {
+					img := part.GetImageMedia()
+					if img != nil && img.Url != "" {
+						var base64Data string
+						if strings.HasPrefix(img.Url, "http") {
+							fileData, err := service.GetFileBase64FromUrl(c, img.Url, "fetch image for ollama chat")
+							if err != nil {
+								return nil, err
+							}
+							base64Data = fileData.Base64Data
+						} else if strings.HasPrefix(img.Url, "data:") {
+							if idx := strings.Index(img.Url, ","); idx != -1 && idx+1 < len(img.Url) {
+								base64Data = img.Url[idx+1:]
+							}
+						} else {
+							base64Data = img.Url
+						}
+						if base64Data != "" {
+							images = append(images, base64Data)
+						}
+					}
+				} else if part.Type == dto.ContentTypeText {
+					textBuilder.WriteString(part.Text)
+				}
+			}
+		}
+		cm := OllamaChatMessage{Role: m.Role, Content: textBuilder.String()}
+		if len(images) > 0 {
+			cm.Images = images
+		}
+		if m.Role == "tool" && m.Name != nil {
+			cm.ToolName = *m.Name
+		}
+		if m.ToolCalls != nil && len(m.ToolCalls) > 0 {
+			parsed := m.ParseToolCalls()
+			if len(parsed) > 0 {
+				calls := make([]OllamaToolCall, 0, len(parsed))
+				for _, tc := range parsed {
+					var args interface{}
+					if tc.Function.Arguments != "" {
+						_ = json.Unmarshal([]byte(tc.Function.Arguments), &args)
+					}
+					if args == nil {
+						args = map[string]any{}
+					}
+					oc := OllamaToolCall{}
+					oc.Function.Name = tc.Function.Name
+					oc.Function.Arguments = args
+					calls = append(calls, oc)
+				}
+				cm.ToolCalls = calls
+			}
+		}
+		chatReq.Messages = append(chatReq.Messages, cm)
+	}
+	return chatReq, nil
 }
 
-func flattenEmbeddings(embeddings [][]float64) []float64 {
-flattened := []float64{}
-for _, row := range embeddings {
-	flattened = append(flattened, row...)
+// openAIToGenerate converts OpenAI completions request to Ollama generate
+func openAIToGenerate(c *gin.Context, r *dto.GeneralOpenAIRequest) (*OllamaGenerateRequest, error) {
+	gen := &OllamaGenerateRequest{
+		Model:   r.Model,
+		Stream:  r.Stream,
+		Options: map[string]any{},
+		Think:   r.Think,
+	}
+	// Prompt may be in r.Prompt (string or []any)
+	if r.Prompt != nil {
+		switch v := r.Prompt.(type) {
+		case string:
+			gen.Prompt = v
+		case []any:
+			var sb strings.Builder
+			for _, it := range v {
+				if s, ok := it.(string); ok {
+					sb.WriteString(s)
+				}
+			}
+			gen.Prompt = sb.String()
+		default:
+			gen.Prompt = fmt.Sprintf("%v", r.Prompt)
+		}
+	}
+	if r.Suffix != nil {
+		if s, ok := r.Suffix.(string); ok {
+			gen.Suffix = s
+		}
+	}
+	if r.ResponseFormat != nil {
+		if r.ResponseFormat.Type == "json" {
+			gen.Format = "json"
+		} else if r.ResponseFormat.Type == "json_schema" {
+			var schema any
+			_ = json.Unmarshal(r.ResponseFormat.JsonSchema, &schema)
+			gen.Format = schema
+		}
+	}
+	if r.Temperature != nil {
+		gen.Options["temperature"] = r.Temperature
+	}
+	if r.TopP != 0 {
+		gen.Options["top_p"] = r.TopP
+	}
+	if r.TopK != 0 {
+		gen.Options["top_k"] = r.TopK
+	}
+	if r.FrequencyPenalty != 0 {
+		gen.Options["frequency_penalty"] = r.FrequencyPenalty
+	}
+	if r.PresencePenalty != 0 {
+		gen.Options["presence_penalty"] = r.PresencePenalty
+	}
+	if r.Seed != 0 {
+		gen.Options["seed"] = int(r.Seed)
+	}
+	if mt := r.GetMaxTokens(); mt != 0 {
+		gen.Options["num_predict"] = int(mt)
+	}
+	if r.Stop != nil {
+		switch v := r.Stop.(type) {
+		case string:
+			gen.Options["stop"] = []string{v}
+		case []string:
+			gen.Options["stop"] = v
+		case []any:
+			arr := make([]string, 0, len(v))
+			for _, i := range v {
+				if s, ok := i.(string); ok {
+					arr = append(arr, s)
+				}
+			}
+			if len(arr) > 0 {
+				gen.Options["stop"] = arr
+			}
+		}
+	}
+	return gen, nil
 }
-return flattened
+
+func requestOpenAI2Embeddings(r dto.EmbeddingRequest) *OllamaEmbeddingRequest {
+	opts := map[string]any{}
+	if r.Temperature != nil {
+		opts["temperature"] = r.Temperature
+	}
+	if r.TopP != 0 {
+		opts["top_p"] = r.TopP
+	}
+	if r.FrequencyPenalty != 0 {
+		opts["frequency_penalty"] = r.FrequencyPenalty
+	}
+	if r.PresencePenalty != 0 {
+		opts["presence_penalty"] = r.PresencePenalty
+	}
+	if r.Seed != 0 {
+		opts["seed"] = int(r.Seed)
+	}
+	if r.Dimensions != 0 {
+		opts["dimensions"] = r.Dimensions
+	}
+	input := r.ParseInput()
+	if len(input) == 1 {
+		return &OllamaEmbeddingRequest{Model: r.Model, Input: input[0], Options: opts, Dimensions: r.Dimensions}
+	}
+	return &OllamaEmbeddingRequest{Model: r.Model, Input: input, Options: opts, Dimensions: r.Dimensions}
+}
+
+func ollamaEmbeddingHandler(c *gin.Context, info *relaycommon.RelayInfo, resp *http.Response) (*dto.Usage, *types.NewAPIError) {
+	var oResp OllamaEmbeddingResponse
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, types.NewOpenAIError(err, types.ErrorCodeBadResponseBody, http.StatusInternalServerError)
+	}
+	service.CloseResponseBodyGracefully(resp)
+	if err = common.Unmarshal(body, &oResp); err != nil {
+		return nil, types.NewOpenAIError(err, types.ErrorCodeBadResponseBody, http.StatusInternalServerError)
+	}
+	if oResp.Error != "" {
+		return nil, types.NewOpenAIError(fmt.Errorf("ollama error: %s", oResp.Error), types.ErrorCodeBadResponseBody, http.StatusInternalServerError)
+	}
+	data := make([]dto.OpenAIEmbeddingResponseItem, 0, len(oResp.Embeddings))
+	for i, emb := range oResp.Embeddings {
+		data = append(data, dto.OpenAIEmbeddingResponseItem{Index: i, Object: "embedding", Embedding: emb})
+	}
+	usage := &dto.Usage{PromptTokens: oResp.PromptEvalCount, CompletionTokens: 0, TotalTokens: oResp.PromptEvalCount}
+	embResp := &dto.OpenAIEmbeddingResponse{Object: "list", Data: data, Model: info.UpstreamModelName, Usage: *usage}
+	out, _ := common.Marshal(embResp)
+	service.IOCopyBytesGracefully(c, resp, out)
+	return usage, nil
 }

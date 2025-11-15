@@ -1,5 +1,6 @@
 .idea
 .vscode
+.zed
 upload
 *.exe
 *.db
@@ -9,3 +10,14 @@ logs
 docker-compose-private.yml
 web/dist
 .env
+one-api
+new-api
+/__debug_bin*
+.DS_Store
+tiktoken_cache
+.eslintcache
+.gocache
+.cache
+
+electron/node_modules
+electron/dist

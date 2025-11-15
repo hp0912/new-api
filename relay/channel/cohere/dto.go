@@ -1,13 +1,13 @@
 package cohere
 
-import "one-api/dto"
+import "github.com/QuantumNous/new-api/dto"
 
 type CohereRequest struct {
 	Model       string        `json:"model"`
 	ChatHistory []ChatHistory `json:"chat_history"`
 	Message     string        `json:"message"`
 	Stream      bool          `json:"stream"`
-	MaxTokens   int           `json:"max_tokens"`
+	MaxTokens   uint          `json:"max_tokens"`
 	SafetyMode  string        `json:"safety_mode,omitempty"`
 }
 
@@ -40,8 +40,8 @@ type CohereRerankRequest struct {
 }
 
 type CohereRerankResponseResult struct {
-	Results []dto.RerankResponseDocument `json:"results"`
-	Meta    CohereMeta                   `json:"meta"`
+	Results []dto.RerankResponseResult `json:"results"`
+	Meta    CohereMeta                 `json:"meta"`
 }
 
 type CohereMeta struct {
