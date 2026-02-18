@@ -43,6 +43,7 @@ import RechargeCard from './RechargeCard';
 import InvitationCard from './InvitationCard';
 import TransferModal from './modals/TransferModal';
 import PaymentConfirmModal from './modals/PaymentConfirmModal';
+import Alipay from './modals/Alipay';
 import TopupHistoryModal from './modals/TopupHistoryModal';
 
 const TopUp = () => {
