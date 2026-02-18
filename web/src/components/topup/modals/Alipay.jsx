@@ -17,8 +17,8 @@ const Alipay = (props) => {
           `/api/user/pay/status?trade_no=${props.tradeNo}`,
         );
         if (res.data.success) {
-          props.onCancel();
           clearInterval(intervalId);
+          props.onOK();
         }
       } catch (error) {
         if (error instanceof Error) {

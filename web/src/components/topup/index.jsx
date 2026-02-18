@@ -660,12 +660,14 @@ const TopUp = () => {
     setSelectedCreemProduct(null);
   };
 
+  const handerAlipayOK = useCallback(() => {
+    setAlipayState({ open: false, QRCodeURL: '', tradeNo: '' });
+    getUserQuota().then();
+    setTransferAmount(getQuotaPerUnit());
+  }, []);
+
   const handerAlipayCancel = useCallback(() => {
-    setAlipayState({
-      open: false,
-      QRCodeURL: '',
-      tradeNo: '',
-    });
+    setAlipayState({ open: false, QRCodeURL: '', tradeNo: '' });
   }, []);
 
   // 选择预设充值额度
@@ -730,6 +732,7 @@ const TopUp = () => {
           open={alipayState.open}
           QRCodeURL={alipayState.QRCodeURL}
           tradeNo={alipayState.tradeNo}
+          onOK={handerAlipayOK}
           onCancel={handerAlipayCancel}
         />
       )}
