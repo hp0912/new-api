@@ -84,7 +84,7 @@ func SetApiRouter(router *gin.Engine) {
 				selfRoute.GET("/topup/self", controller.GetUserTopUps)
 				selfRoute.POST("/topup", middleware.CriticalRateLimit(), controller.TopUp)
 				selfRoute.POST("/pay", middleware.CriticalRateLimit(), controller.RequestEpay)
-				selfRoute.GET("/pay/status", middleware.CriticalRateLimit(), controller.CheckPayStatus)
+				selfRoute.GET("/pay/status", controller.CheckPayStatus)
 				selfRoute.POST("/amount", controller.RequestAmount)
 				selfRoute.POST("/stripe/pay", middleware.CriticalRateLimit(), controller.RequestStripePay)
 				selfRoute.POST("/stripe/amount", controller.RequestStripeAmount)
@@ -156,7 +156,8 @@ func SetApiRouter(router *gin.Engine) {
 		}
 
 		// Payment callbacks (no auth)
-		apiRouter.Any("/payment/notify/:tradeNo", controller.PaymentCallback)
+		apiRouter.GET("/payment/notify/:tradeNo", controller.PaymentCallback)
+		apiRouter.POST("/payment/notify/:tradeNo", controller.PaymentCallback)
 		// Subscription payment callbacks (no auth)
 		apiRouter.POST("/subscription/epay/notify", controller.SubscriptionEpayNotify)
 		apiRouter.GET("/subscription/epay/notify", controller.SubscriptionEpayNotify)
