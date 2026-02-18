@@ -1,9 +1,13 @@
 import React, { useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Modal } from '@douyinfe/semi-ui';
+import { QrCode } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { API, showError } from '../../../helpers';
 
 const Alipay = (props) => {
+  const { t } = useTranslation();
+  
   useEffect(() => {
     const checkPaymentStatus = async () => {
       try {
@@ -30,7 +34,7 @@ const Alipay = (props) => {
     <Modal
       title={
         <div className='flex items-center'>
-          <CreditCard className='mr-2' size={18} />
+          <QrCode className='mr-2' size={18} />
           {t('使用支付宝扫码付款')}
         </div>
       }
