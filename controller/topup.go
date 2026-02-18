@@ -3,6 +3,7 @@ package controller
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"net/url"
 	"strconv"
 	"sync"
@@ -355,7 +356,7 @@ func PaymentCallback(c *gin.Context) {
 	paymentService, err := payment.NewPaymentService("alipay", tradeNo)
 	if err != nil {
 		log.Printf("支付宝回调，创建支付服务失败，订单号 %s, 错误: %v", tradeNo, err)
-		c.JSON(200, gin.H{"success": false, "message": err.Error()})
+		c.String(http.StatusOK, "%s", "failure")
 		return
 	}
 
@@ -389,6 +390,11 @@ func PaymentCallback(c *gin.Context) {
 		}
 		log.Printf("支付宝回调，更新用户成功 %v", topUp)
 		model.RecordLog(topUp.UserId, model.LogTypeTopup, fmt.Sprintf("使用支付宝在线充值成功，充值金额: %v，支付金额：%f", logger.LogQuota(quotaToAdd), topUp.Money))
+		return
+	}
+	if topUp.Status == "success" {
+		c.String(http.StatusOK, "%s", "success")
+		return
 	}
 }
 
