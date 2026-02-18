@@ -367,9 +367,9 @@ func PaymentCallback(c *gin.Context) {
 
 	LockOrder(payNotify.GatewayNo)
 	defer UnlockOrder(payNotify.GatewayNo)
-	topUp := model.GetTopUpByTradeNo(payNotify.GatewayNo)
+	topUp := model.GetTopUpByTradeNo(payNotify.TradeNo)
 	if topUp == nil {
-		log.Printf("支付宝回调，未找到订单: %s", payNotify.GatewayNo)
+		log.Printf("支付宝回调，未找到订单: %s", payNotify.TradeNo)
 		return
 	}
 	if topUp.Status == "pending" {
