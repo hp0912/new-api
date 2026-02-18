@@ -439,6 +439,7 @@
     "充值方式设置": "Cài đặt phương thức nạp tiền",
     "充值方式设置不是合法的 JSON 字符串": "Cài đặt phương thức nạp tiền không phải là chuỗi JSON hợp lệ",
     "充值确认": "Xác nhận nạp tiền",
+    "使用支付宝扫码付款": "Thanh toán bằng Alipay bằng cách quét mã QR",
     "充值账单": "Hóa đơn nạp tiền",
     "充值金额折扣配置": "Cấu hình giảm giá số tiền nạp",
     "充值金额折扣配置不是合法的 JSON 对象": "Cấu hình giảm giá số tiền nạp không phải là đối tượng JSON hợp lệ",

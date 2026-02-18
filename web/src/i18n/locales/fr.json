@@ -442,6 +442,7 @@
     "充值方式设置": "Méthodes recharge",
     "充值方式设置不是合法的 JSON 字符串": "Les paramètres de la méthode de recharge ne sont pas une chaîne JSON valide",
     "充值确认": "Confirmation de la recharge",
+    "使用支付宝扫码付款": "Payez avec Alipay en scannant le code QR",
     "充值账单": "Factures de recharge",
     "充值金额折扣配置": "Configuration des remises sur le montant de recharge",
     "充值金额折扣配置不是合法的 JSON 对象": "La configuration des remises sur le montant de recharge n'est pas un objet JSON valide",

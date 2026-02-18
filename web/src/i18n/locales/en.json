@@ -440,6 +440,7 @@
     "充值方式设置": "Top Up method settings",
     "充值方式设置不是合法的 JSON 字符串": "Top Up method settings is not a valid JSON string",
     "充值确认": "Top Up confirmation",
+    "使用支付宝扫码付款": "Pay with Alipay by scanning the QR code",
     "充值账单": "Top Up Bills",
     "充值金额折扣配置": "Top Up amount discount configuration",
     "充值金额折扣配置不是合法的 JSON 对象": "Top Up amount discount configuration is not a valid JSON object",

@@ -17,7 +17,13 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React, { useEffect, useState, useContext, useRef } from 'react';
+import React, {
+  useEffect,
+  useState,
+  useContext,
+  useRef,
+  useCallback,
+} from 'react';
 import {
   API,
   showError,
@@ -103,6 +109,13 @@ const TopUp = () => {
   const [topupInfo, setTopupInfo] = useState({
     amount_options: [],
     discount: {},
+  });
+
+  // 支付宝支付
+  const [alipayState, setAlipayState] = useState({
+    open: false,
+    QRCodeURL: '',
+    tradeNo: '',
   });
 
   const topUp = async () => {
@@ -223,6 +236,12 @@ const TopUp = () => {
           if (payWay === 'stripe') {
             // Stripe 支付回调处理
             window.open(data.pay_link, '_blank');
+          } else if (payWay === 'alipay') {
+            setAlipayState({
+              open: true,
+              QRCodeURL: data.pay_request.data.url,
+              tradeNo: data.trade_no,
+            });
           } else {
             // 普通支付表单提交
             let params = data;
@@ -640,6 +659,14 @@ const TopUp = () => {
     setSelectedCreemProduct(null);
   };
 
+  const handerAlipayCancel = useCallback(() => {
+    setAlipayState({
+      open: false,
+      QRCodeURL: '',
+      tradeNo: '',
+    });
+  }, []);
+
   // 选择预设充值额度
   const selectPresetAmount = (preset) => {
     setTopUpCount(preset.value);
@@ -695,6 +722,16 @@ const TopUp = () => {
         amountNumber={amount}
         discountRate={topupInfo?.discount?.[topUpCount] || 1.0}
       />
+
+      {/* 支付宝支付模态框 */}
+      {alipayState.open && (
+        <Alipay
+          open={alipayState.open}
+          QRCodeURL={alipayState.QRCodeURL}
+          tradeNo={alipayState.tradeNo}
+          onCancel={handerAlipayCancel}
+        />
+      )}
 
       {/* 充值账单模态框 */}
       <TopupHistoryModal

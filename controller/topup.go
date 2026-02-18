@@ -11,6 +11,7 @@ import (
 	"github.com/QuantumNous/new-api/common"
 	"github.com/QuantumNous/new-api/logger"
 	"github.com/QuantumNous/new-api/model"
+	"github.com/QuantumNous/new-api/pkg/payment"
 	"github.com/QuantumNous/new-api/service"
 	"github.com/QuantumNous/new-api/setting"
 	"github.com/QuantumNous/new-api/setting/operation_setting"
@@ -197,7 +198,41 @@ func RequestEpay(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "error", "data": "创建订单失败"})
 		return
 	}
+	if req.PaymentMethod == "alipay" {
+		paymentService, err := payment.NewPaymentService(req.PaymentMethod, tradeNo)
+		if err != nil {
+			c.JSON(200, gin.H{"message": "error", "data": "创建订单失败"})
+			return
+		}
+		payRequest, err := paymentService.Pay(tradeNo, payMoney, id)
+		if err != nil {
+			c.JSON(200, gin.H{"message": "error", "data": "创建支付失败，请稍后再试"})
+			return
+		}
+		payResponse := map[string]any{
+			"trade_no":    tradeNo,
+			"pay_request": payRequest,
+		}
+		c.JSON(200, gin.H{"message": "success", "data": payResponse})
+		return
+	}
 	c.JSON(200, gin.H{"message": "success", "data": params, "url": uri})
+}
+
+func CheckPayStatus(c *gin.Context) {
+	tradeNo := c.Query("trade_no")
+
+	topUp := model.GetTopUpByTradeNo(tradeNo)
+	if topUp == nil {
+		c.JSON(200, gin.H{"success": false, "message": "订单不存在"})
+		return
+	}
+	if topUp.Status == "success" {
+		c.JSON(200, gin.H{"success": true, "message": "订单已支付成功"})
+		return
+	}
+
+	c.JSON(200, gin.H{"success": false, "message": "订单未支付"})
 }
 
 // tradeNo lock
@@ -309,6 +344,51 @@ func EpayNotify(c *gin.Context) {
 		}
 	} else {
 		log.Printf("易支付异常回调: %v", verifyInfo)
+	}
+}
+
+func PaymentCallback(c *gin.Context) {
+	tradeNo := c.Param("tradeNo")
+
+	log.Printf("支付宝回调，订单号 %s", tradeNo)
+
+	paymentService, err := payment.NewPaymentService("alipay", tradeNo)
+	if err != nil {
+		log.Printf("支付宝回调，创建支付服务失败，订单号 %s, 错误: %v", tradeNo, err)
+		c.JSON(200, gin.H{"success": false, "message": err.Error()})
+		return
+	}
+
+	payNotify, err := paymentService.HandleCallback(c)
+	if err != nil {
+		log.Printf("支付宝回调，处理回调失败，订单号 %s, 错误: %v", tradeNo, err)
+		return
+	}
+
+	LockOrder(payNotify.GatewayNo)
+	defer UnlockOrder(payNotify.GatewayNo)
+	topUp := model.GetTopUpByTradeNo(payNotify.GatewayNo)
+	if topUp == nil {
+		log.Printf("支付宝回调，未找到订单: %s", payNotify.GatewayNo)
+		return
+	}
+	if topUp.Status == "pending" {
+		topUp.Status = "success"
+		err := topUp.Update()
+		if err != nil {
+			log.Printf("支付宝回调，更新订单失败: %v，%v", topUp, err)
+			return
+		}
+		dAmount := decimal.NewFromInt(int64(topUp.Amount))
+		dQuotaPerUnit := decimal.NewFromFloat(common.QuotaPerUnit)
+		quotaToAdd := int(dAmount.Mul(dQuotaPerUnit).IntPart())
+		err = model.IncreaseUserQuota(topUp.UserId, quotaToAdd, true)
+		if err != nil {
+			log.Printf("支付宝回调，更新用户失败: %v", topUp)
+			return
+		}
+		log.Printf("支付宝回调，更新用户成功 %v", topUp)
+		model.RecordLog(topUp.UserId, model.LogTypeTopup, fmt.Sprintf("使用支付宝在线充值成功，充值金额: %v，支付金额：%f", logger.LogQuota(quotaToAdd), topUp.Money))
 	}
 }
 
