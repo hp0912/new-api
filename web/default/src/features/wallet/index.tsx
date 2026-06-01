@@ -23,6 +23,7 @@ import { useStatus } from '@/hooks/use-status'
 import { useSystemConfig } from '@/hooks/use-system-config'
 import { SectionPageLayout } from '@/components/layout'
 import { AffiliateRewardsCard } from './components/affiliate-rewards-card'
+import { AlipayQRDialog } from './components/dialogs/alipay-qr-dialog'
 import { BillingHistoryDialog } from './components/dialogs/billing-history-dialog'
 import { CreemConfirmDialog } from './components/dialogs/creem-confirm-dialog'
 import { PaymentConfirmDialog } from './components/dialogs/payment-confirm-dialog'
@@ -90,6 +91,8 @@ export function Wallet(props: WalletProps) {
     processing,
     calculatePaymentAmount,
     processPayment,
+    alipayQR,
+    closeAlipayQR,
   } = usePayment()
   const {
     affiliateLink,
@@ -359,6 +362,21 @@ export function Wallet(props: WalletProps) {
         onConfirm={handleCreemConfirm}
         product={selectedCreemProduct}
         processing={creemProcessing}
+      />
+
+      <AlipayQRDialog
+        open={alipayQR.open}
+        qrCodeUrl={alipayQR.qrCodeUrl}
+        tradeNo={alipayQR.tradeNo}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeAlipayQR()
+          }
+        }}
+        onSuccess={async () => {
+          closeAlipayQR()
+          await fetchUser()
+        }}
       />
     </>
   )

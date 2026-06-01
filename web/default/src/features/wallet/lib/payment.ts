@@ -87,6 +87,55 @@ export function isWaffoPancakePayment(paymentType: string): boolean {
 }
 
 /**
+ * Check if payment method is Alipay
+ *
+ * Alipay goes through a dedicated backend flow that returns a `pay_request`
+ * (QR code for face-to-face pay, or a redirect URL for page / wap pay)
+ * instead of the generic epay form parameters, so it must be special-cased.
+ */
+export function isAlipayPayment(paymentType: string): boolean {
+  return paymentType === PAYMENT_TYPES.ALIPAY
+}
+
+/**
+ * Reject non-navigable schemes (e.g. javascript:, data:) and relative URLs.
+ * Only http / https are allowed for backend-provided redirect targets.
+ */
+export function isSafeHttpCheckoutUrl(value: string): boolean {
+  const trimmed = (value || '').trim()
+  if (!trimmed) {
+    return false
+  }
+  try {
+    const u = new URL(trimmed)
+    return u.protocol === 'http:' || u.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Build the final Alipay page/wap pay URL by appending signed query params.
+ */
+export function buildAlipayPageUrl(
+  url: string,
+  params?: Record<string, string> | null
+): string {
+  if (!params) {
+    return url
+  }
+  try {
+    const target = new URL(url)
+    Object.entries(params).forEach(([key, value]) => {
+      target.searchParams.set(key, String(value))
+    })
+    return target.toString()
+  } catch {
+    return url
+  }
+}
+
+/**
  * Get default payment type from topup info
  */
 export function getDefaultPaymentType(topupInfo: TopupInfo | null): string {

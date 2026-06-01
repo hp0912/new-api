@@ -38,6 +38,35 @@ export type AmountResponse = ApiResponse<string>
 export type PaymentResponse = ApiResponse<Record<string, unknown>> & {
   url?: string
 }
+
+/**
+ * Alipay pay request payload returned by the backend when the selected
+ * payment method is Alipay. `type` is 1 for a redirect/form URL (page / wap
+ * pay) and 2 for a QR code (face-to-face / pre-create).
+ */
+export interface AlipayPayRequest {
+  type: number
+  data: {
+    url: string
+    method?: string
+    params?: Record<string, string> | null
+  }
+}
+
+/**
+ * Backend response data when paying with Alipay through `/api/user/pay`.
+ */
+export interface AlipayPaymentData {
+  trade_no: string
+  pay_request: AlipayPayRequest
+}
+
+/**
+ * Pay status response for polling whether an Alipay order has been paid.
+ */
+export type PayStatusResponse = ApiResponse & {
+  success?: boolean
+}
 export type StripePaymentResponse = ApiResponse<{ pay_link: string }>
 export type AffiliateCodeResponse = ApiResponse<string>
 export type AffiliateTransferResponse = ApiResponse

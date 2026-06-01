@@ -30,17 +30,45 @@ import {
 import {
   isStripePayment,
   isWaffoPancakePayment,
+  isAlipayPayment,
+  buildAlipayPageUrl,
+  isSafeHttpCheckoutUrl,
   submitPaymentForm,
 } from '../lib'
+import type { AlipayPaymentData } from '../types'
 
 // ============================================================================
 // Payment Hook
 // ============================================================================
 
+/**
+ * State for the Alipay QR code dialog. When `open` is true the wallet page
+ * shows a QR code that the user scans with the Alipay app, while the dialog
+ * polls the backend until the order is paid.
+ */
+export interface AlipayQRState {
+  open: boolean
+  qrCodeUrl: string
+  tradeNo: string
+}
+
+const INITIAL_ALIPAY_QR_STATE: AlipayQRState = {
+  open: false,
+  qrCodeUrl: '',
+  tradeNo: '',
+}
+
 export function usePayment() {
   const [amount, setAmount] = useState<number>(0)
   const [calculating, setCalculating] = useState(false)
   const [processing, setProcessing] = useState(false)
+  const [alipayQR, setAlipayQR] = useState<AlipayQRState>(
+    INITIAL_ALIPAY_QR_STATE
+  )
+
+  const closeAlipayQR = useCallback(() => {
+    setAlipayQR(INITIAL_ALIPAY_QR_STATE)
+  }, [])
 
   // Calculate payment amount
   const calculatePaymentAmount = useCallback(
@@ -106,6 +134,38 @@ export function usePayment() {
           return true
         }
 
+        // Handle Alipay payment (QR code or page/wap redirect)
+        if (isAlipayPayment(paymentType) && response.data?.pay_request) {
+          const alipayData = response.data as unknown as AlipayPaymentData
+          const payRequest = alipayData.pay_request
+          const payUrl = payRequest?.data?.url
+
+          if (!payUrl) {
+            toast.error(i18next.t('Payment request failed'))
+            return false
+          }
+
+          // type 2 => QR code (face-to-face / pre-create): show scan dialog
+          if (payRequest.type === 2) {
+            setAlipayQR({
+              open: true,
+              qrCodeUrl: payUrl,
+              tradeNo: alipayData.trade_no,
+            })
+            return true
+          }
+
+          // type 1 => redirect URL (page / wap pay): open the signed URL
+          const finalUrl = buildAlipayPageUrl(payUrl, payRequest.data?.params)
+          if (!isSafeHttpCheckoutUrl(finalUrl)) {
+            toast.error(i18next.t('Payment request failed'))
+            return false
+          }
+          window.open(finalUrl, '_blank')
+          toast.success(i18next.t('Redirecting to payment page...'))
+          return true
+        }
+
         // Handle non-Stripe payment
         if (!isStripe && response.data) {
           const url = (response as unknown as { url?: string }).url
@@ -134,5 +194,7 @@ export function usePayment() {
     calculatePaymentAmount,
     processPayment,
     setAmount,
+    alipayQR,
+    closeAlipayQR,
   }
 }

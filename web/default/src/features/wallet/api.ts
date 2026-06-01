@@ -38,6 +38,7 @@ import type {
   WaffoPaymentResponse,
   WaffoPancakePaymentRequest,
   WaffoPancakePaymentResponse,
+  PayStatusResponse,
 } from './types'
 
 // ============================================================================
@@ -106,6 +107,18 @@ export async function requestPayment(
     ...res.data,
     url: res.data.url || (res as unknown as { url?: string }).url,
   }
+}
+
+/**
+ * Poll whether an Alipay (or other QR-based) order has been paid.
+ */
+export async function checkPayStatus(
+  tradeNo: string
+): Promise<PayStatusResponse> {
+  const res = await api.get(
+    `/api/user/pay/status?trade_no=${encodeURIComponent(tradeNo)}`
+  )
+  return res.data
 }
 
 /**
