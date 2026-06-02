@@ -3213,6 +3213,7 @@
     "Redirecting to GitHub...": "Đang chuyển hướng đến GitHub...",
     "Redirecting to payment page...": "Đang chuyển hướng đến trang thanh toán...",
     "Open the Alipay app and scan the QR code to complete payment.": "Mở ứng dụng Alipay và quét mã QR để hoàn tất thanh toán.",
+    "Waiting for payment, please scan with Alipay...": "Đang chờ thanh toán, vui lòng quét bằng Alipay...",
     "Payment successful": "Thanh toán thành công",
     "Scan with Alipay to pay": "Quét bằng Alipay để thanh toán",
     "Redirecting to sign in in {{seconds}} seconds.": "Đang chuyển đến trang đăng nhập sau {{seconds}} giây.",

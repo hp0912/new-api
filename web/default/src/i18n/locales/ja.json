@@ -3213,6 +3213,7 @@
     "Redirecting to GitHub...": "GitHub にリダイレクトしています...",
     "Redirecting to payment page...": "支払いページにリダイレクト中...",
     "Open the Alipay app and scan the QR code to complete payment.": "Alipay アプリを開き、QR コードをスキャンして支払いを完了してください。",
+    "Waiting for payment, please scan with Alipay...": "支払いを待機中です。Alipay でスキャンしてください...",
     "Payment successful": "支払いが完了しました",
     "Scan with Alipay to pay": "Alipay でスキャンして支払う",
     "Redirecting to sign in in {{seconds}} seconds.": "{{seconds}} 秒後にログインページへ移動します。",

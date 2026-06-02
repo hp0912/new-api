@@ -116,7 +116,10 @@ export async function checkPayStatus(
   tradeNo: string
 ): Promise<PayStatusResponse> {
   const res = await api.get(
-    `/api/user/pay/status?trade_no=${encodeURIComponent(tradeNo)}`
+    `/api/user/pay/status?trade_no=${encodeURIComponent(tradeNo)}`,
+    {
+      skipBusinessError: true,
+    } as Record<string, unknown>
   )
   return res.data
 }

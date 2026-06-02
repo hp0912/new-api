@@ -3213,6 +3213,7 @@
     "Redirecting to GitHub...": "Redirecting to GitHub...",
     "Redirecting to payment page...": "Redirecting to payment page...",
     "Open the Alipay app and scan the QR code to complete payment.": "Open the Alipay app and scan the QR code to complete payment.",
+    "Waiting for payment, please scan with Alipay...": "Waiting for payment, please scan with Alipay...",
     "Payment successful": "Payment successful",
     "Scan with Alipay to pay": "Scan with Alipay to pay",
     "Redirecting to sign in in {{seconds}} seconds.": "Redirecting to sign in in {{seconds}} seconds.",

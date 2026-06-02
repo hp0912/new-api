@@ -135,12 +135,14 @@ export function usePayment() {
         }
 
         // Handle Alipay payment (QR code or page/wap redirect)
-        if (isAlipayPayment(paymentType) && response.data?.pay_request) {
-          const alipayData = response.data as unknown as AlipayPaymentData
-          const payRequest = alipayData.pay_request
+        if (isAlipayPayment(paymentType)) {
+          const alipayData = response.data as unknown as
+            | AlipayPaymentData
+            | undefined
+          const payRequest = alipayData?.pay_request
           const payUrl = payRequest?.data?.url
 
-          if (!payUrl) {
+          if (!alipayData || !payRequest || !payUrl) {
             toast.error(i18next.t('Payment request failed'))
             return false
           }

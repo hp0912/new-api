@@ -368,6 +368,7 @@ export function Wallet(props: WalletProps) {
         open={alipayQR.open}
         qrCodeUrl={alipayQR.qrCodeUrl}
         tradeNo={alipayQR.tradeNo}
+        payAmount={paymentAmount}
         onOpenChange={(open) => {
           if (!open) {
             closeAlipayQR()
