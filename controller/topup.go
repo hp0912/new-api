@@ -3,7 +3,6 @@ package controller
 import (
 	"errors"
 	"fmt"
-	"log"
 	"maps"
 	"net/http"
 	"net/url"
@@ -535,18 +534,18 @@ func EpayNotify(c *gin.Context) {
 func PaymentCallback(c *gin.Context) {
 	tradeNo := c.Param("tradeNo")
 
-	log.Printf("支付宝回调，订单号 %s", tradeNo)
+	logger.LogInfo(c.Request.Context(), common.LogText("Alipay webhook received request trade_no=%s path=%q client_ip=%s", tradeNo, c.Request.RequestURI, c.ClientIP()))
 
 	paymentService, err := payment.NewPaymentService("alipay", tradeNo)
 	if err != nil {
-		log.Printf("支付宝回调，创建支付服务失败，订单号 %s, 错误: %v", tradeNo, err)
+		logger.LogError(c.Request.Context(), common.LogText("Alipay webhook failed to create payment service trade_no=%s client_ip=%s error=%q", tradeNo, c.ClientIP(), err.Error()))
 		c.String(http.StatusOK, "%s", "failure")
 		return
 	}
 
 	payNotify, err := paymentService.HandleCallback(c)
 	if err != nil {
-		log.Printf("支付宝回调，处理回调失败，订单号 %s, 错误: %v", tradeNo, err)
+		logger.LogError(c.Request.Context(), common.LogText("Alipay webhook processing failed trade_no=%s client_ip=%s error=%q", tradeNo, c.ClientIP(), err.Error()))
 		return
 	}
 
@@ -554,14 +553,14 @@ func PaymentCallback(c *gin.Context) {
 	defer UnlockOrder(payNotify.GatewayNo)
 	topUp := model.GetTopUpByTradeNo(payNotify.TradeNo)
 	if topUp == nil {
-		log.Printf("支付宝回调，未找到订单: %s", payNotify.TradeNo)
+		logger.LogWarn(c.Request.Context(), common.LogText("Alipay callback order not found trade_no=%s gateway_no=%s client_ip=%s", payNotify.TradeNo, payNotify.GatewayNo, c.ClientIP()))
 		return
 	}
 	if topUp.Status == "pending" {
 		topUp.Status = "success"
 		err := topUp.Update()
 		if err != nil {
-			log.Printf("支付宝回调，更新订单失败: %v，%v", topUp, err)
+			logger.LogError(c.Request.Context(), common.LogText("Alipay failed to update top-up order trade_no=%s user_id=%d client_ip=%s error=%q", topUp.TradeNo, topUp.UserId, c.ClientIP(), err.Error()))
 			return
 		}
 		dAmount := decimal.NewFromInt(int64(topUp.Amount))
@@ -569,11 +568,15 @@ func PaymentCallback(c *gin.Context) {
 		quotaToAdd := int(dAmount.Mul(dQuotaPerUnit).IntPart())
 		err = model.IncreaseUserQuota(topUp.UserId, quotaToAdd, true)
 		if err != nil {
-			log.Printf("支付宝回调，更新用户失败: %v", topUp)
+			logger.LogError(c.Request.Context(), common.LogText("Alipay failed to credit user quota trade_no=%s user_id=%d quota_to_add=%d client_ip=%s error=%q", topUp.TradeNo, topUp.UserId, quotaToAdd, c.ClientIP(), err.Error()))
 			return
 		}
-		log.Printf("支付宝回调，更新用户成功 %v", topUp)
-		model.RecordTopupLog(topUp.UserId, fmt.Sprintf("使用支付宝在线充值成功，充值金额: %v，支付金额：%f", logger.LogQuota(quotaToAdd), topUp.Money), c.ClientIP(), topUp.PaymentMethod, "alipay")
+		logger.LogInfo(c.Request.Context(), common.LogText("Alipay top-up succeeded trade_no=%s user_id=%d quota_to_add=%d money=%.2f client_ip=%s", topUp.TradeNo, topUp.UserId, quotaToAdd, topUp.Money, c.ClientIP()))
+		model.RecordTopupLog(topUp.UserId, common.NewMessage("{{provider}} top-up succeeded, amount added: {{quota}}, payment amount: {{amount}}", map[string]any{
+			"provider": "Alipay",
+			"quota":    logger.FormatQuota(quotaToAdd),
+			"amount":   fmt.Sprintf("%f", topUp.Money),
+		}), c.ClientIP(), topUp.PaymentMethod, "alipay")
 		return
 	}
 	if topUp.Status == "success" {
